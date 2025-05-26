@@ -4,10 +4,10 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
 
-class RoleMiddleware
+class ProfileMiddleware
 {
     /**
      * Handle an incoming request.
@@ -16,10 +16,10 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user_role = Auth::user()->role->value;
-        if ($user_role === 'guest') {
-            ///
+        if (!Auth::check()) {
+            abort(404);
         }
+
         return $next($request);
     }
 }

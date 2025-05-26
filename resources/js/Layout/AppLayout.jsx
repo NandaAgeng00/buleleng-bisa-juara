@@ -2,7 +2,7 @@ import { Link, usePage, useForm } from "@inertiajs/react"
 import { Button } from "@/components/ui/button";
 import NavLink from "@/components/Navlink";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import LoginForm from "@/components/auth/LoginForm";
 import RegisterForm from "@/components/auth/RegisterForm";
 import { DialogTitle } from "@radix-ui/react-dialog";
@@ -13,6 +13,8 @@ export default function AppLayout({ children }) {
     const { post } = useForm();
     const { auth } = page.props;
     const user = auth?.user;
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
 
     useEffect(() => {
         console.log("Page props:", page.props);
@@ -26,6 +28,20 @@ export default function AppLayout({ children }) {
             post('/logout');
         }
     }
+
+    // Handle dropdown agar menutup saat klik di luar
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('click', handleClickOutside);
+        return () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
+    })
 
     // Handle ESC key untuk menutup sidebar
     useEffect(() => {
@@ -55,6 +71,10 @@ export default function AppLayout({ children }) {
         console.log("Login submitted");
     }
 
+    function toggleDropdown() {
+        setIsDropdownOpen(!isDropdownOpen);
+    }
+
     const handleSidebarToggle = () => {
         setSideBarOpen(!sideBarOpen);
     };
@@ -80,13 +100,13 @@ export default function AppLayout({ children }) {
 
     return (
         <>
-            <nav className="flex justify-between items-center px-4 py-4 border-b relative z-20">
+            <nav className="grid md:grid-cols-3 grid-cols-2 justify-between items-center px-4 py-2 border-b relative z-20">
                 {/* Nama Aplikasi */}
-                <div className="flex items-center">
-                    <h1 className="font-semibold text-xl hidden sm:flex">BULELENG BISA JUARA</h1>
+                <div className="flex items-center w-full">
+                    <h1 className="font-semibold text-xl hidden md:flex">BULELENG BISA JUARA</h1>
                     <button
                         onClick={handleSidebarToggle}
-                        className="sm:hidden p-1 hover:bg-gray-100 rounded transition-colors duration-200"
+                        className="md:hidden p-1 hover:bg-gray-100 rounded transition-colors duration-200"
                         aria-label="Toggle menu"
                         aria-expanded={sideBarOpen}
                     >
@@ -104,34 +124,41 @@ export default function AppLayout({ children }) {
                 </div>
 
                 {/* Navbar Menu Desktop */}
-                <div className="sm:flex space-x-4 font-normal text-lg hidden">
+                <div className="md:flex space-x-4 font-normal text-lg hidden w-full justify-center">
                     <NavLink current={page.url} href={'/'}>Beranda</NavLink>
-                    <NavLink current={page.url} href={'/about'}>Tentang Kami</NavLink>
-                    <NavLink current={page.url} href={'/contact'}>Hubungi Kami</NavLink>
+                    <NavLink current={page.url} href={'/about'}>Tentang</NavLink>
+                    <NavLink current={page.url} href={'/contact'}>Kontak</NavLink>
                 </div>
 
                 {/* Login / Register / Profil Desktop */}
                 { user ? (
-                    <div className="relative">
-                        <Avatar className={"w-12 h-12"} onClick={() => console.log("Avatar clicked")}>
-                            <AvatarImage></AvatarImage>
-                            <AvatarFallback className="bg-gray-200 text-2xl text-gray-600">
-                                {user.name.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                        </Avatar>
-                        <div className="absolute right-0 bg-white shadow-lg rounded-md mt-2 w-52 p-4 text-sm text-gray-700 border">
-                            <div className="pb-3 border-b">
-                                <h1 className="font-semibold text-base">{user.name}</h1>
-                                <p className="text-gray-500">{user.email}</p>
-                            </div>
-                            <div className="flex flex-col text-md mt-4">
-                                <Link href={'/dashboard'} className="hover:bg-gray-200 rounded-md p-2">Dashboard</Link>
-                                <Link onClick={() => handleLogout()} className="hover:bg-gray-200 rounded-md p-2">Logout</Link>
-                            </div>
+                    <div className="flex items-center justify-end w-full">
+                        <div className="relative" ref={dropdownRef}>
+                            <Avatar className={"w-10 h-10 cursor-pointer select-none"} onClick={() => toggleDropdown()}>
+                                <AvatarImage></AvatarImage>
+                                <AvatarFallback className="bg-gray-200 text-2xl text-gray-600">
+                                    {user.name.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
+                            {isDropdownOpen && (
+                                <div className="absolute right-0 bg-white shadow-lg rounded-md mt-2 w-52 p-4 text-sm text-gray-700 border">
+                                    <div className="pb-3 border-b">
+                                        <h1 className="font-semibold text-base">{user.name}</h1>
+                                        <p className="text-gray-500">{user.email}</p>
+                                    </div>
+                                    <div className="flex flex-col text-md mt-4">
+                                        <Link href={'/profile'} className="hover:bg-gray-200 rounded-md p-2">Profil</Link>
+                                        { user.role !== "guest" && (
+                                            <Link href={'/dashboard'} className="hover:bg-gray-200 rounded-md p-2">Dashboard</Link>
+                                        )}
+                                        <Link onClick={() => handleLogout()} className="hover:bg-gray-200 rounded-md p-2">Logout</Link>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 ) : (
-                    <div className="flex">
+                    <div className="flex w-full justify-end items-center">
                         <Button 
                             onClick={() => setActiveModal("login")} 
                             className="bg-red-600 hover:bg-red-700 text-white text-lg sm:py-6 py-5 mr-0 sm:mr-4 transition-all duration-200"
@@ -146,7 +173,6 @@ export default function AppLayout({ children }) {
                         </Button>     
                     </div>
                 ) }
-                
             </nav>
 
             {/* Auth Modals */}
@@ -154,7 +180,6 @@ export default function AppLayout({ children }) {
                 open={activeModal !== null}
                 onOpenChange={() => setActiveModal(null)}
             >
-
                 <DialogContent className="sm:max-w-[320px]">
                     <DialogTitle></DialogTitle>
                     {activeModal === "login" && <LoginForm onAuthSuccess={() => setActiveModal(null)}/>}

@@ -51,6 +51,6 @@ class RegisterController extends Controller
             return redirect()->route('dashboard');
         }
 
-        return redirect()->route('login')->withErrors('Gagal login otomatis.');
+        return redirect()->route('home');
     }
 }

@@ -18,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('auth', [
             \App\Http\Middleware\EnsureUserIsAuthenticated::class,
         ]);
+
+        $middleware->appendToGroup('profile', [
+            \App\Http\Middleware\ProfileMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

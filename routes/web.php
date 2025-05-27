@@ -20,6 +20,10 @@ Route::get('/me', function () {
     return Auth::user();
 });
 
+
+
+
+
 Route::get('/login', function() {
     abort(404);
 });
